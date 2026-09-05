@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F1E6;
+    --paper:#FFFDF8;
+    --ink:#2A2117;
+    --ink-soft:#6B5D4B;
+    --pine:#22402F;
+    --pine-dark:#152A1E;
+    --pine-tint:#E7EEE7;
+    --gold:#B98A2E;
+    --gold-tint:#F6EBD4;
+    --rust:#A0472A;
+    --rust-tint:#F3E2DA;
+    --line:#E1D8C2;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Zilla Slab',serif;}
+
+  /* Background texture: faint ledger rule lines */
+  body{
+    background-image: repeating-linear-gradient(180deg, transparent, transparent 34px, rgba(34,64,47,0.045) 35px);
+  }
+
+  header.top{
+    background:var(--pine);
+    color:#F5F1E6;
+    padding:22px 20px 0 20px;
+    position:sticky; top:0; z-index:20;
+    box-shadow:0 2px 10px rgba(0,0,0,0.12);
+  }
+  .brand{display:flex; align-items:center; gap:10px; max-width:920px; margin:0 auto; padding-bottom:16px;}
+  .brand svg{flex-shrink:0;}
+  .brand h1{font-family:'Zilla Slab',serif; font-size:22px; font-weight:700; margin:0; letter-spacing:0.2px;}
+  .brand p{margin:0; font-size:12.5px; color:#C9D6CC; font-weight:500;}
+
+  nav.tabs{max-width:920px; margin:0 auto; display:flex; gap:6px;}
+  .tab-btn{
+    appearance:none; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.08);
+    color:#DCE6DE;
+    font-family:'Zilla Slab',serif; font-weight:600; font-size:15px;
+    padding:11px 20px 13px 20px;
+    border-radius:8px 8px 0 0;
+    position:relative; top:1px;
+    transition:background 0.15s;
+  }
+  .tab-btn:hover{background:rgba(255,255,255,0.15);}
+  .tab-btn.active{background:var(--bg); color:var(--pine-dark);}
+
+  main{max-width:920px; margin:0 auto; padding:22px 20px 80px 20px;}
+
+  .summary-strip{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px;
+  }
+  .stat{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px;
+  }
+  .stat .label{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); font-weight:600; margin-bottom:4px;}
+  .stat .value{font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:600; color:var(--pine-dark);}
+  .stat .value.rust{color:var(--rust);}
+  .stat .value.gold{color:var(--gold);}
+
+  .section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .section-head h2{font-family:'Zilla Slab',serif; font-size:19px; margin:0; color:var(--pine-dark);}
+
+  .btn{
+    appearance:none; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-weight:600;
+    border-radius:7px; padding:9px 16px; font-size:13.5px; transition:transform 0.08s, background 0.15s;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--pine); color:#fff;}
+  .btn-primary:hover{background:var(--pine-dark);}
+  .btn-ghost{background:transparent; color:var(--pine); border:1px solid var(--pine);}
+  .btn-ghost:hover{background:var(--pine-tint);}
+  .btn-small{padding:6px 11px; font-size:12.5px; border-radius:6px;}
+  .btn-danger{background:transparent; color:var(--rust); border:1px solid transparent;}
+  .btn-danger:hover{background:var(--rust-tint);}
+
+  .add-form{
+    background:var(--paper); border:1px dashed var(--line); border-radius:var(--radius);
+    padding:14px; margin-bottom:16px; display:none; gap:10px; flex-wrap:wrap; align-items:flex-end;
+  }
+  .add-form.open{display:flex;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:11px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em;}
+  .field input, .field select{
+    border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:14px;
+    font-family:'Inter',sans-serif; background:#fff; color:var(--ink); min-width:140px;
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--pine); outline-offset:1px;}
+
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    margin-bottom:12px; overflow:hidden;
+  }
+  .card-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 16px; cursor:pointer;
+  }
+  .card-head:hover{background:rgba(34,64,47,0.03);}
+  .card-title{display:flex; align-items:center; gap:10px;}
+  .avatar{
+    width:34px; height:34px; border-radius:50%; background:var(--gold-tint); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'Zilla Slab',serif; font-size:15px;
+    flex-shrink:0;
+  }
+  .card-title h3{margin:0; font-size:15.5px; font-weight:700; color:var(--ink);}
+  .card-title .sub{font-size:12px; color:var(--ink-soft);}
+  .card-figures{display:flex; gap:18px; align-items:center;}
+  .fig{text-align:right;}
+  .fig .flabel{font-size:10.5px; text-transform:uppercase; color:var(--ink-soft); font-weight:600; letter-spacing:0.04em;}
+  .fig .fvalue{font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px;}
+  .chev{transition:transform 0.15s; color:var(--ink-soft);}
+  .card.expanded .chev{transform:rotate(180deg);}
+
+  .card-body{display:none; border-top:1px dashed var(--line); padding:16px;}
+  .card.expanded .card-body{display:block;}
+
+  .subgrid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:680px){ .subgrid{grid-template-columns:1fr;} .summary-strip{grid-template-columns:repeat(2,1fr);} }
+
+  .sub-block h4{font-family:'Zilla Slab',serif; font-size:14px; margin:0 0 10px 0; color:var(--pine-dark); display:flex; align-items:center; justify-content:space-between;}
+
+  table.mini{width:100%; border-collapse:collapse; font-size:13px;}
+  table.mini th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; color:var(--ink-soft); font-weight:600;
+    padding:6px 6px; border-bottom:1px solid var(--line);
+  }
+  table.mini td{padding:7px 6px; border-bottom:1px solid var(--line); font-family:'JetBrains Mono',monospace; font-size:13px;}
+  table.mini td.txt{font-family:'Inter',sans-serif;}
+  table.mini tr:last-child td{border-bottom:none;}
+  .del-x{cursor:pointer; color:var(--ink-soft); border:none; background:none; font-size:15px; padding:2px 4px;}
+  .del-x:hover{color:var(--rust);}
+  .empty-row{color:var(--ink-soft); font-style:italic; font-size:12.5px; padding:8px 0;}
+
+  .crop-fields{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px;}
+  @media (max-width:680px){ .crop-fields{grid-template-columns:repeat(2,1fr);} }
+  .crop-field label{font-size:11px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.03em; display:block; margin-bottom:4px;}
+  .crop-field input{
+    width:100%; border:1px solid var(--line); border-radius:6px; padding:8px 9px; font-size:14px;
+    font-family:'JetBrains Mono',monospace; background:#fff;
+  }
+  .crop-totals{
+    display:flex; gap:22px; padding-top:12px; border-top:1px dashed var(--line); flex-wrap:wrap;
+  }
+
+  .empty-state{
+    text-align:center; padding:40px 20px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:var(--radius); background:var(--paper);
+  }
+  .empty-state .glyph{font-size:26px; margin-bottom:8px;}
+
+  footer{max-width:920px; margin:0 auto; padding:0 20px 30px 20px; text-align:center; color:var(--ink-soft); font-size:11.5px;}
+
+  .loading{text-align:center; padding:60px 20px; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+      <path d="M15 27C15 27 6 22 6 13.5C6 8.5 9.5 5 15 5C20.5 5 24 8.5 24 13.5C24 22 15 27 15 27Z" fill="#B98A2E" opacity="0.9"/>
+      <path d="M15 27C15 27 9 21 9 14C9 10.5 11.5 8 15 8C18.5 8 21 10.5 21 14C21 21 15 27 15 27Z" fill="#22402F"/>
+      <path d="M15 8V22" stroke="#F5F1E6" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+    </svg>
+    <div>
+      <h1>Farm Ledger</h1>
+      <p>Labour records &amp; crop investment tracker</p>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="labour" onclick="switchTab('labour')">Labour</button>
+    <button class="tab-btn" data-tab="crops" onclick="switchTab('crops')">Crops</button>
+    <button class="tab-btn" data-tab="sales" onclick="switchTab('sales')">Selling</button>
+  </nav>
+</header>
+
+<main id="main">
+  <div class="loading">Loading your farm records…</div>
+</main>
+
+<footer>Records are saved automatically and are private to you.</footer>
+
+<script>
+let labours = [];
+let crops = [];
+let sales = [];
+let activeTab = 'labour';
+let dataReady = false;
+let loadError = false;
+
+const API = '/api';
+const CROP_TYPES = ['Cotton','Soybean','Wheat','Sugarcane','Onion','Tomato','Potato','Maize','Jowar','Bajra','Groundnut','Tur (Arhar)','Gram (Chana)','Grapes','Banana','Other'];
+const UNIT_TO_KG = { kg: 1, quintal: 100, ton: 1000 };
+const fmt = n => '₹' + (Math.round((n||0)*100)/100).toLocaleString('en-IN');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const todayStr = () => new Date().toISOString().slice(0,10);
+
+async function api(path, options){
+  const res = await fetch(API + path, {
+    headers: {'Content-Type':'application/json'},
+    ...options
+  });
+  if(!res.ok){
+    const body = await res.json().catch(()=>({}));
+    throw new Error(body.error || ('Request failed: ' + res.status));
+  }
+  return res.json();
+}
+
+async function loadData(){
+  try{
+    [labours, crops, sales] = await Promise.all([
+      api('/labours'),
+      api('/crops'),
+      api('/sales')
+    ]);
+    loadError = false;
+  }catch(e){
+    console.error('Failed to load data from server', e);
+    loadError = true;
+  }
+  dataReady = true;
+  render();
+}
+
+function switchTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  render();
+}
+
+function labourEarned(l){ return (l.workdays||[]).reduce((s,w)=>s+Number(w.wage||0),0); }
+function labourPaid(l){ return (l.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0); }
+function labourDue(l){ return labourEarned(l) - labourPaid(l); }
+
+function cropInvestment(c){
+  return Number(c.seedPrice||0)+Number(c.labourAmount||0)+Number(c.fertilizerAmount||0)+Number(c.sprayAmount||0)+Number(c.otherAmount||0);
+}
+function cropSales(cropId){ return sales.filter(s => (s.crop?._id || s.crop) === cropId); }
+function cropSaleTotal(cropId){ return cropSales(cropId).reduce((s,x)=>s+Number(x.amount||0),0); }
+function cropSaleWeightKg(cropId){ return cropSales(cropId).reduce((s,x)=>s+Number(x.weight||0)*(UNIT_TO_KG[x.unit]||1),0); }
+function cropProfit(c){ return cropSaleTotal(c._id) - cropInvestment(c); }
+
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()).join('');
+}
+
+// Newest date first; if two entries share a date, the one added most recently comes first
+function byDateDesc(a, b){
+  const d = String(b.date).localeCompare(String(a.date));
+  if(d !== 0) return d;
+  return String(b.createdAt||'').localeCompare(String(a.createdAt||''));
+}
+
+// Most recent activity date for a labourer (latest work day or payment), for list ordering
+function labourLatestDate(l){
+  const dates = [...(l.workdays||[]).map(w=>w.date), ...(l.payments||[]).map(p=>p.date)];
+  return dates.length ? dates.sort().slice(-1)[0] : (l.createdAt||'').slice(0,10);
+}
+
+// Most recent activity date for a crop (latest sale, else last edited), for list ordering
+function cropLatestDate(c){
+  const saleDates = cropSales(c._id).map(s=>s.date);
+  return saleDates.length ? saleDates.sort().slice(-1)[0] : (c.updatedAt||c.createdAt||'').slice(0,10);
+}
+
+/* ---------- render ---------- */
+function render(){
+  const main = document.getElementById('main');
+  if(!dataReady){ main.innerHTML = '<div class="loading">Loading your farm records…</div>'; return; }
+  if(loadError){
+    main.innerHTML = '<div class="empty-state"><div class="glyph">⚠️</div>Could not reach the server. Make sure the backend is running and MONGO_URI is set correctly, then <button class="btn btn-ghost btn-small" onclick="loadData()">retry</button>.</div>';
+    return;
+  }
+  main.innerHTML = activeTab === 'labour' ? renderLabourTab() : activeTab === 'crops' ? renderCropsTab() : renderSalesTab();
+  attachHandlers();
+}
+
+function renderLabourTab(){
+  const totalEarned = labours.reduce((s,l)=>s+labourEarned(l),0);
+  const totalPaid = labours.reduce((s,l)=>s+labourPaid(l),0);
+  const totalDue = totalEarned - totalPaid;
+
+  const list = labours.length ? labours.slice().sort((a,b)=>labourLatestDate(b).localeCompare(labourLatestDate(a))).map(renderLabourCard).join('') : `
+    <div class="empty-state">
+      <div class="glyph">🧑‍🌾</div>
+      No labour added yet. Click "Add Labour" to start a record.
+    </div>`;
+
+  return `
+  <div class="summary-strip">
+    <div class="stat"><div class="label">Labourers</div><div class="value">${labours.length}</div></div>
+    <div class="stat"><div class="label">Total Earned</div><div class="value">${fmt(totalEarned)}</div></div>
+    <div class="stat"><div class="label">Total Paid</div><div class="value gold">${fmt(totalPaid)}</div></div>
+    <div class="stat"><div class="label">Balance Due</div><div class="value rust">${fmt(totalDue)}</div></div>
+  </div>
+
+  <div class="section-head">
+    <h2>Labourers</h2>
+    <button class="btn btn-primary" onclick="toggleForm('add-labour-form')">+ Add Labour</button>
+  </div>
+
+  <div class="add-form" id="add-labour-form">
+    <div class="field">
+      <label>Labour Name</label>
+      <input type="text" id="new-labour-name" placeholder="e.g. Ramesh Patil">
+    </div>
+    <button class="btn btn-primary" onclick="addLabour()">Save</button>
+    <button class="btn btn-ghost" onclick="toggleForm('add-labour-form')">Cancel</button>
+  </div>
+
+  <div id="labour-list">${list}</div>
+  `;
+}
+
+function renderLabourCard(l){
+  const id = l._id;
+  const earned = labourEarned(l), paid = labourPaid(l), due = labourDue(l);
+  const expanded = l._expanded ? 'expanded' : '';
+  const workdayRows = (l.workdays||[]).slice().sort(byDateDesc).map(w => `
+    <tr>
+      <td class="txt">${esc(w.date)}</td>
+      <td>${fmt(w.wage)}</td>
+      <td><button class="del-x" onclick="event.stopPropagation(); deleteWorkday('${id}','${w._id}')" title="Remove">✕</button></td>
+    </tr>`).join('') || `<tr><td colspan="3" class="empty-row">No work days recorded yet.</td></tr>`;
+
+  const paymentRows = (l.payments||[]).slice().sort(byDateDesc).map(p => `
+    <tr>
+      <td class="txt">${esc(p.date)}</td>
+      <td>${fmt(p.amount)}</td>
+      <td class="txt">${esc(p.reason||'—')}</td>
+      <td><button class="del-x" onclick="event.stopPropagation(); deletePayment('${id}','${p._id}')" title="Remove">✕</button></td>
+    </tr>`).join('') || `<tr><td colspan="4" class="empty-row">No payments recorded yet.</td></tr>`;
+
+  return `
+  <div class="card ${expanded}" id="labour-card-${id}">
+    <div class="card-head" onclick="toggleLabourCard('${id}')">
+      <div class="card-title">
+        <div class="avatar">${esc(initials(l.name))}</div>
+        <div>
+          <h3>${esc(l.name)}</h3>
+          <div class="sub">${(l.workdays||[]).length} day(s) · ${(l.payments||[]).length} payment(s)</div>
+        </div>
+      </div>
+      <div class="card-figures">
+        <div class="fig"><div class="flabel">Earned</div><div class="fvalue">${fmt(earned)}</div></div>
+        <div class="fig"><div class="flabel">Paid</div><div class="fvalue" style="color:var(--gold)">${fmt(paid)}</div></div>
+        <div class="fig"><div class="flabel">Due</div><div class="fvalue" style="color:${due>0?'var(--rust)':'var(--pine)'}">${fmt(due)}</div></div>
+        <button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteLabour('${id}')">Delete</button>
+        <span class="chev">▾</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="subgrid">
+        <div class="sub-block">
+          <h4>Work Days
+            <button class="btn btn-small btn-ghost" onclick="toggleForm('wd-form-${id}')">+ Add Day</button>
+          </h4>
+          <div class="add-form" id="wd-form-${id}">
+            <div class="field"><label>Date</label><input type="date" id="wd-date-${id}" value="${todayStr()}"></div>
+            <div class="field"><label>Wage (₹)</label><input type="number" id="wd-wage-${id}" placeholder="0" min="0"></div>
+            <button class="btn btn-small btn-primary" onclick="addWorkday('${id}')">Save</button>
+          </div>
+          <table class="mini">
+            <thead><tr><th>Date</th><th>Wage</th><th></th></tr></thead>
+            <tbody>${workdayRows}</tbody>
+          </table>
+        </div>
+        <div class="sub-block">
+          <h4>Payments
+            <button class="btn btn-small btn-ghost" onclick="toggleForm('pay-form-${id}')">+ Add Payment</button>
+          </h4>
+          <div class="add-form" id="pay-form-${id}">
+            <div class="field"><label>Date</label><input type="date" id="pay-date-${id}" value="${todayStr()}"></div>
+            <div class="field"><label>Amount (₹)</label><input type="number" id="pay-amount-${id}" placeholder="0" min="0"></div>
+            <div class="field"><label>Reason</label><input type="text" id="pay-reason-${id}" placeholder="e.g. Weekly settlement"></div>
+            <button class="btn btn-small btn-primary" onclick="addPayment('${id}')">Save</button>
+          </div>
+          <table class="mini">
+            <thead><tr><th>Date</th><th>Amount</th><th>Reason</th><th></th></tr></thead>
+            <tbody>${paymentRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCropsTab(){
+  const totalInvestment = crops.reduce((s,c)=>s+cropInvestment(c),0);
+  const totalRevenue = crops.reduce((s,c)=>s+cropSaleTotal(c._id),0);
+  const totalProfit = totalRevenue - totalInvestment;
+
+  const list = crops.length ? crops.slice().sort((a,b)=>cropLatestDate(b).localeCompare(cropLatestDate(a))).map(renderCropCard).join('') : `
+    <div class="empty-state">
+      <div class="glyph">🌾</div>
+      No crops added yet. Click "Add Crop" to track your first crop.
+    </div>`;
+
+  return `
+  <div class="summary-strip">
+    <div class="stat"><div class="label">Crops</div><div class="value">${crops.length}</div></div>
+    <div class="stat"><div class="label">Invested</div><div class="value">${fmt(totalInvestment)}</div></div>
+    <div class="stat"><div class="label">Revenue</div><div class="value gold">${fmt(totalRevenue)}</div></div>
+    <div class="stat"><div class="label">Profit</div><div class="value" style="color:${totalProfit>=0?'var(--pine)':'var(--rust)'}">${fmt(totalProfit)}</div></div>
+  </div>
+
+  <div class="section-head">
+    <h2>Crops</h2>
+    <button class="btn btn-primary" onclick="toggleForm('add-crop-form')">+ Add Crop</button>
+  </div>
+
+  <div class="add-form" id="add-crop-form">
+    <div class="field">
+      <label>Crop</label>
+      <select id="new-crop-select" onchange="onCropTypeChange()">
+        <option value="">Select a crop…</option>
+        ${CROP_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field" id="new-crop-other-wrap" style="display:none;">
+      <label>Crop Name</label>
+      <input type="text" id="new-crop-other" placeholder="e.g. Cotton - Plot 2">
+    </div>
+    <button class="btn btn-primary" onclick="addCrop()">Save</button>
+    <button class="btn btn-ghost" onclick="toggleForm('add-crop-form')">Cancel</button>
+  </div>
+
+  <div id="crop-list">${list}</div>
+  `;
+}
+
+function onCropTypeChange(){
+  const sel = document.getElementById('new-crop-select');
+  const wrap = document.getElementById('new-crop-other-wrap');
+  wrap.style.display = sel.value === 'Other' ? 'flex' : 'none';
+}
+
+function renderCropCard(c){
+  const id = c._id;
+  const investment = cropInvestment(c);
+  const saleTotal = cropSaleTotal(id);
+  const profit = cropProfit(c);
+  const receiptCount = cropSales(id).length;
+  const expanded = c._expanded ? 'expanded' : '';
+  return `
+  <div class="card ${expanded}" id="crop-card-${id}">
+    <div class="card-head" onclick="toggleCropCard('${id}')">
+      <div class="card-title">
+        <div class="avatar">🌱</div>
+        <div>
+          <h3>${esc(c.name)}</h3>
+          <div class="sub">${receiptCount} sale receipt(s) · tap to edit investment</div>
+        </div>
+      </div>
+      <div class="card-figures">
+        <div class="fig"><div class="flabel">Invested</div><div class="fvalue">${fmt(investment)}</div></div>
+        <div class="fig"><div class="flabel">Revenue</div><div class="fvalue" style="color:var(--gold)">${fmt(saleTotal)}</div></div>
+        <div class="fig"><div class="flabel">Profit</div><div class="fvalue" style="color:${profit>=0?'var(--pine)':'var(--rust)'}">${fmt(profit)}</div></div>
+        <button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteCrop('${id}')">Delete</button>
+        <span class="chev">▾</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="crop-fields">
+        ${cropInput(c,'seedPrice','Seed Price (₹)')}
+        ${cropInput(c,'labourAmount','Labour Amount (₹)')}
+        ${cropInput(c,'fertilizerAmount','Fertilizer Amount (₹)')}
+        ${cropInput(c,'sprayAmount','Spray Amount (₹)')}
+        ${cropInput(c,'otherAmount','Other Investment (₹)')}
+      </div>
+      <div class="crop-totals">
+        <div class="fig"><div class="flabel">Total Investment</div><div class="fvalue">${fmt(investment)}</div></div>
+        <div class="fig"><div class="flabel">Sale Revenue</div><div class="fvalue" style="color:var(--gold)">${fmt(saleTotal)}</div></div>
+        <div class="fig"><div class="flabel">Net Profit / Loss</div><div class="fvalue" style="color:${profit>=0?'var(--pine)':'var(--rust)'}">${fmt(profit)}</div></div>
+      </div>
+      <p style="margin:12px 0 0 0; font-size:12.5px; color:var(--ink-soft);">
+        Record what this crop sells for under the <strong>Selling</strong> tab — revenue and profit here update automatically.
+      </p>
+    </div>
+  </div>`;
+}
+
+function cropInput(c, key, label){
+  return `
+    <div class="crop-field">
+      <label>${esc(label)}</label>
+      <input type="number" min="0" value="${c[key] ?? ''}" placeholder="0"
+        onclick="event.stopPropagation()"
+        onchange="updateCropField('${c._id}','${key}', this.value)">
+    </div>`;
+}
+
+function renderSalesTab(){
+  const totalRevenue = sales.reduce((s,x)=>s+Number(x.amount||0),0);
+  const totalInvestment = crops.reduce((s,c)=>s+cropInvestment(c),0);
+  const totalProfit = totalRevenue - totalInvestment;
+  const totalWeightKg = sales.reduce((s,x)=>s+Number(x.weight||0)*(UNIT_TO_KG[x.unit]||1),0);
+
+  if(!crops.length){
+    return `
+    <div class="empty-state">
+      <div class="glyph">💰</div>
+      Add a crop under the <strong>Crops</strong> tab first, then come back here to record its sale receipts.
+    </div>`;
+  }
+
+  const list = crops.slice().sort((a,b)=>cropLatestDate(b).localeCompare(cropLatestDate(a))).map(renderSaleCropCard).join('');
+
+  return `
+  <div class="summary-strip">
+    <div class="stat"><div class="label">Receipts</div><div class="value">${sales.length}</div></div>
+    <div class="stat"><div class="label">Total Weight Sold</div><div class="value">${(totalWeightKg/100).toLocaleString('en-IN',{maximumFractionDigits:2})} qtl</div></div>
+    <div class="stat"><div class="label">Total Revenue</div><div class="value gold">${fmt(totalRevenue)}</div></div>
+    <div class="stat"><div class="label">Overall Profit</div><div class="value" style="color:${totalProfit>=0?'var(--pine)':'var(--rust)'}">${fmt(totalProfit)}</div></div>
+  </div>
+
+  <div class="section-head">
+    <h2>Selling</h2>
+  </div>
+  <p style="margin:-8px 0 16px 0; font-size:12.5px; color:var(--ink-soft);">Select a crop below to add a sale receipt for it.</p>
+
+  <div id="sale-list">${list}</div>
+  `;
+}
+
+function renderSaleCropCard(c){
+  const id = c._id;
+  const receipts = cropSales(id).slice().sort(byDateDesc);
+  const saleTotal = cropSaleTotal(id);
+  const weightKg = cropSaleWeightKg(id);
+  const profit = cropProfit(c);
+  const expanded = c._saleExpanded ? 'expanded' : '';
+
+  const rows = receipts.map(r => `
+    <tr>
+      <td class="txt">${esc(r.date)}</td>
+      <td class="txt">${esc(r.buyerName)}</td>
+      <td>${r.weight} ${esc(r.unit)}</td>
+      <td>${fmt(r.pricePerUnit)}</td>
+      <td>${fmt(r.amount)}</td>
+      <td><button class="del-x" onclick="event.stopPropagation(); deleteSale('${id}','${r._id}')" title="Remove">✕</button></td>
+    </tr>`).join('') || `<tr><td colspan="6" class="empty-row">No sale receipts yet for this crop.</td></tr>`;
+
+  return `
+  <div class="card ${expanded}" id="sale-card-${id}">
+    <div class="card-head" onclick="toggleSaleCard('${id}')">
+      <div class="card-title">
+        <div class="avatar">🌾</div>
+        <div>
+          <h3>${esc(c.name)}</h3>
+          <div class="sub">${receipts.length} receipt(s) · ${(weightKg/100).toLocaleString('en-IN',{maximumFractionDigits:2})} qtl sold</div>
+        </div>
+      </div>
+      <div class="card-figures">
+        <div class="fig"><div class="flabel">Revenue</div><div class="fvalue" style="color:var(--gold)">${fmt(saleTotal)}</div></div>
+        <div class="fig"><div class="flabel">Profit</div><div class="fvalue" style="color:${profit>=0?'var(--pine)':'var(--rust)'}">${fmt(profit)}</div></div>
+        <span class="chev">▾</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="sub-block">
+        <h4>Sale Receipts
+          <button class="btn btn-small btn-ghost" onclick="event.stopPropagation(); toggleForm('sale-form-${id}')">+ Add Receipt</button>
+        </h4>
+        <div class="add-form" id="sale-form-${id}">
+          <div class="field"><label>Date</label><input type="date" id="sale-date-${id}" value="${todayStr()}"></div>
+          <div class="field"><label>Buyer Name</label><input type="text" id="sale-buyer-${id}" placeholder="e.g. Shirdi APMC"></div>
+          <div class="field"><label>Weight</label><input type="number" id="sale-weight-${id}" placeholder="0" min="0"></div>
+          <div class="field">
+            <label>Unit</label>
+            <select id="sale-unit-${id}">
+              <option value="quintal" selected>Quintal</option>
+              <option value="kg">Kg</option>
+              <option value="ton">Ton</option>
+            </select>
+          </div>
+          <div class="field"><label>Price / Unit (₹)</label><input type="number" id="sale-price-${id}" placeholder="0" min="0"></div>
+          <button class="btn btn-small btn-primary" onclick="addSale('${id}')">Save</button>
+        </div>
+        <table class="mini">
+          <thead><tr><th>Date</th><th>Buyer</th><th>Weight</th><th>Price/Unit</th><th>Amount</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleForm(id){
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+
+/* ---------- labour actions ---------- */
+function toggleLabourCard(id){
+  const l = labours.find(x=>x._id===id);
+  if(l){ l._expanded = !l._expanded; render(); }
+}
+async function addLabour(){
+  const nameEl = document.getElementById('new-labour-name');
+  const name = nameEl.value.trim();
+  if(!name) return;
+  try{
+    const labour = await api('/labours', {method:'POST', body: JSON.stringify({name})});
+    labour._expanded = true;
+    labours.unshift(labour);
+    render();
+  }catch(e){ alert('Could not add labourer: ' + e.message); }
+}
+async function deleteLabour(id){
+  if(!confirm('Remove this labourer and all their records?')) return;
+  try{
+    await api('/labours/'+id, {method:'DELETE'});
+    labours = labours.filter(l=>l._id!==id);
+    render();
+  }catch(e){ alert('Could not delete: ' + e.message); }
+}
+async function addWorkday(labourId){
+  const date = document.getElementById('wd-date-'+labourId).value || todayStr();
+  const wage = Number(document.getElementById('wd-wage-'+labourId).value || 0);
+  if(wage <= 0) return alert('Enter a wage amount greater than 0.');
+  try{
+    const updated = await api(`/labours/${labourId}/workdays`, {method:'POST', body: JSON.stringify({date, wage})});
+    updated._expanded = true;
+    labours = labours.map(l => l._id===labourId ? updated : l);
+    render();
+  }catch(e){ alert('Could not save work day: ' + e.message); }
+}
+async function deleteWorkday(labourId, wdId){
+  try{
+    const updated = await api(`/labours/${labourId}/workdays/${wdId}`, {method:'DELETE'});
+    updated._expanded = true;
+    labours = labours.map(l => l._id===labourId ? updated : l);
+    render();
+  }catch(e){ alert('Could not remove entry: ' + e.message); }
+}
+async function addPayment(labourId){
+  const date = document.getElementById('pay-date-'+labourId).value || todayStr();
+  const amount = Number(document.getElementById('pay-amount-'+labourId).value || 0);
+  const reason = document.getElementById('pay-reason-'+labourId).value.trim();
+  if(amount <= 0) return alert('Enter a payment amount greater than 0.');
+  try{
+    const updated = await api(`/labours/${labourId}/payments`, {method:'POST', body: JSON.stringify({date, amount, reason})});
+    updated._expanded = true;
+    labours = labours.map(l => l._id===labourId ? updated : l);
+    render();
+  }catch(e){ alert('Could not save payment: ' + e.message); }
+}
+async function deletePayment(labourId, payId){
+  try{
+    const updated = await api(`/labours/${labourId}/payments/${payId}`, {method:'DELETE'});
+    updated._expanded = true;
+    labours = labours.map(l => l._id===labourId ? updated : l);
+    render();
+  }catch(e){ alert('Could not remove entry: ' + e.message); }
+}
+
+/* ---------- crop actions ---------- */
+function toggleCropCard(id){
+  const c = crops.find(x=>x._id===id);
+  if(c){ c._expanded = !c._expanded; render(); }
+}
+async function addCrop(){
+  const sel = document.getElementById('new-crop-select');
+  const otherEl = document.getElementById('new-crop-other');
+  const name = sel.value === 'Other' ? otherEl.value.trim() : sel.value;
+  if(!name) return alert('Please select a crop (or choose "Other" and type a name).');
+  try{
+    const crop = await api('/crops', {method:'POST', body: JSON.stringify({name})});
+    crop._expanded = true;
+    crops.unshift(crop);
+    sel.value = '';
+    otherEl.value = '';
+    document.getElementById('new-crop-other-wrap').style.display = 'none';
+    render();
+  }catch(e){ alert('Could not add crop: ' + e.message); }
+}
+async function deleteCrop(id){
+  if(!confirm('Remove this crop and its sale receipts?')) return;
+  try{
+    await api('/crops/'+id, {method:'DELETE'});
+    crops = crops.filter(c=>c._id!==id);
+    sales = sales.filter(s=>(s.crop?._id || s.crop)!==id);
+    render();
+  }catch(e){ alert('Could not delete: ' + e.message); }
+}
+async function updateCropField(id, key, value){
+  try{
+    const updated = await api('/crops/'+id, {method:'PUT', body: JSON.stringify({[key]: Number(value || 0)})});
+    updated._expanded = true;
+    crops = crops.map(c => c._id===id ? updated : c);
+    render();
+  }catch(e){ alert('Could not save: ' + e.message); }
+}
+
+/* ---------- sale actions ---------- */
+function toggleSaleCard(id){
+  const c = crops.find(x=>x._id===id);
+  if(c){ c._saleExpanded = !c._saleExpanded; render(); }
+}
+async function addSale(cropId){
+  const date = document.getElementById('sale-date-'+cropId).value || todayStr();
+  const buyerName = document.getElementById('sale-buyer-'+cropId).value.trim();
+  const weight = Number(document.getElementById('sale-weight-'+cropId).value || 0);
+  const unit = document.getElementById('sale-unit-'+cropId).value;
+  const pricePerUnit = Number(document.getElementById('sale-price-'+cropId).value || 0);
+  if(!buyerName) return alert('Enter the buyer name.');
+  if(weight <= 0) return alert('Enter a weight greater than 0.');
+  if(pricePerUnit <= 0) return alert('Enter a price per unit greater than 0.');
+  try{
+    const sale = await api('/sales', {method:'POST', body: JSON.stringify({cropId, buyerName, date, weight, unit, pricePerUnit})});
+    sales.unshift(sale);
+    const c = crops.find(x=>x._id===cropId);
+    if(c) c._saleExpanded = true;
+    render();
+  }catch(e){ alert('Could not save receipt: ' + e.message); }
+}
+async function deleteSale(cropId, saleId){
+  try{
+    await api('/sales/'+saleId, {method:'DELETE'});
+    sales = sales.filter(s=>s._id!==saleId);
+    const c = crops.find(x=>x._id===cropId);
+    if(c) c._saleExpanded = true;
+    render();
+  }catch(e){ alert('Could not remove receipt: ' + e.message); }
+}
+
+function attachHandlers(){ /* reserved for future delegated listeners */ }
+
+loadData();
+</script>
+</body>
+</html>
