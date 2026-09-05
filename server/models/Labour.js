@@ -9,7 +9,8 @@ const workdaySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// A single payment made to the labourer
+
+
 const paymentSchema = new mongoose.Schema(
   {
     date: { type: String, required: true },

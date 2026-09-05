@@ -14,6 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // API routes
 app.use('/api/labours', labourRoutes);
 app.use('/api/crops', cropRoutes);
@@ -34,6 +35,7 @@ if (!MONGO_URI) {
     console.error('MONGO_URI is not set.');
     process.exit(1);
 }
+
 
 mongoose.connect(MONGO_URI)
     .then(() => {
