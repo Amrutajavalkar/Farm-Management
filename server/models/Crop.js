@@ -11,5 +11,5 @@ const cropSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-module.exports = mongoose.model('Crop', cropSchema);
+// Modoule.exports = mongoose.model('Crop', cropSchema);
+module.exports =  mongoose.model('Crop', cropSchema);
