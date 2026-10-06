@@ -1,21 +1,36 @@
 {
   "name": "farm-ledger-server",
+<<<<<<< HEAD
   "version": "2.0.0",
   "description": "Backend API for Farm Ledger — labour & crop records plus farmer/worker accounts and connections",
+=======
+  "version": "1.0.0",
+  "description": "Backend API for the Farm Ledger app (labour & crop records)",
+>>>>>>> 6e81af9bb39373b3332805e2a909331226134f69
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
+<<<<<<< HEAD
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+=======
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+>>>>>>> 6e81af9bb39373b3332805e2a909331226134f69
     "mongoose": "^8.5.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
   }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6e81af9bb39373b3332805e2a909331226134f69
